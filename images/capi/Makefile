@@ -294,6 +294,7 @@ OCI_BUILD_NAMES			   ?= oci-ubuntu-1804 oci-ubuntu-2004 oci-oracle-linux-8
 DO_BUILD_NAMES 			?=	do-centos-7 do-ubuntu-1804 do-ubuntu-2004
 
 QEMU_BUILD_NAMES			?=	qemu-ubuntu-1804 qemu-ubuntu-2004 qemu-centos-7 qemu-ubuntu-2004-efi qemu-rhel-8 qemu-rockylinux-8 qemu-flatcar
+LXD_BUILD_NAMES			?=	lxd-ubuntu-2004
 
 RAW_BUILD_NAMES                        ?=      raw-ubuntu-1804 raw-ubuntu-2004 raw-ubuntu-2004-efi raw-flatcar
 VBOX_BUILD_NAMES			?=      vbox-windows-2019
@@ -324,6 +325,8 @@ DO_BUILD_TARGETS 	:= $(addprefix build-,$(DO_BUILD_NAMES))
 DO_VALIDATE_TARGETS 	:= $(addprefix validate-,$(DO_BUILD_NAMES))
 QEMU_BUILD_TARGETS	:= $(addprefix build-,$(QEMU_BUILD_NAMES))
 QEMU_VALIDATE_TARGETS	:= $(addprefix validate-,$(QEMU_BUILD_NAMES))
+LXD_BUILD_TARGETS	:= $(addprefix build-,$(LXD_BUILD_NAMES))
+LXD_VALIDATE_TARGETS	:= $(addprefix validate-,$(LXD_BUILD_NAMES))
 RAW_BUILD_TARGETS      := $(addprefix build-,$(RAW_BUILD_NAMES))
 RAW_VALIDATE_TARGETS   := $(addprefix validate-,$(RAW_BUILD_NAMES))
 OCI_BUILD_TARGETS	:= $(addprefix build-,$(OCI_BUILD_NAMES))
@@ -422,6 +425,14 @@ $(QEMU_BUILD_TARGETS): deps-qemu
 .PHONY: $(QEMU_VALIDATE_TARGETS)
 $(QEMU_VALIDATE_TARGETS): deps-qemu
 	packer validate $(PACKER_NODE_FLAGS) -var-file="$(abspath packer/qemu/$(subst validate-,,$@).json)" $(ABSOLUTE_PACKER_VAR_FILES) packer/qemu/packer.json
+
+.PHONY: $(LXD_BUILD_TARGETS)
+$(LXD_BUILD_TARGETS):
+	packer build $(PACKER_NODE_FLAGS) -var-file="$(abspath packer/lxd/$(subst build-,,$@).json)" $(ABSOLUTE_PACKER_VAR_FILES) packer/lxd/packer.json
+
+.PHONY: $(LXD_VALIDATE_TARGETS)
+$(LXD_VALIDATE_TARGETS):
+	packer validate $(PACKER_NODE_FLAGS) -var-file="$(abspath packer/lxd/$(subst validate-,,$@).json)" $(ABSOLUTE_PACKER_VAR_FILES) packer/lxd/packer.json
 
 .PHONY: $(RAW_BUILD_TARGETS)
 $(RAW_BUILD_TARGETS): deps-raw
@@ -584,6 +595,9 @@ build-qemu-rhel-8: ## Builds RHEL 8 QEMU image
 build-qemu-rockylinux-8: ## Builds Rocky 8 QEMU image
 build-qemu-all: $(QEMU_BUILD_TARGETS) ## Builds all Qemu images
 
+build-lxd-ubuntu-2004: ## Builds Ubuntu 20.04 LXD image
+build-lxd-all: $(QEMU_BUILD_TARGETS) ## Builds all Qemu images
+
 build-raw-flatcar: ## Builds Flatcar RAW image
 build-raw-ubuntu-1804: ## Builds Ubuntu 18.04 RAW image
 build-raw-ubuntu-2004: ## Builds Ubuntu 20.04 RAW image
@@ -674,6 +688,9 @@ validate-qemu-rhel-8: ## Validates RHEL 8 QEMU image
 validate-qemu-rockylinux-8: ## Validates Rocky Linux 8 QEMU image packer config
 validate-qemu-all: $(QEMU_VALIDATE_TARGETS) ## Validates all Qemu Packer config
 
+build-lxd-ubuntu-2004: ## Validate Ubuntu 20.04 LXD image packer config
+build-lxd-all: $(QEMU_BUILD_TARGETS) ## Builds all LXD packer images
+
 validate-raw-flatcar: ## Validates Flatcar RAW image packer config
 validate-raw-ubuntu-1804: ## Validates Ubuntu 18.04 RAW image packer config
 validate-raw-ubuntu-2004: ## Validates Ubuntu 20.04 RAW image packer config
@@ -697,6 +714,7 @@ validate-all: validate-ami-all \
 	validate-gce-all \
 	validate-node-ova-local-all \
 	validate-qemu-all \
+	validate-lxd-all \
 	validate-raw-all \
 	validate-oci-all \
 	validate-vbox-all \
